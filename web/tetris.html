@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--  <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.16/jquery-ui.min.js" ></script>-->
+  <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.js" ></script>
+  <meta charset="utf-8">
+  <title>Hello World</title>
+  <style>
+    .rankList{
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#5e5e5e', endColorstr='#d4d4d4');
+      background: -webkit-gradient(linear, left top, left bottom, from(#5e5e5e), to(#d4d4d4));
+      background: -moz-linear-gradient(top,  #5e5e5e,  #d4d4d4);
+      background: -o-linear-gradient(top,  #5e5e5e,  #d4d4d4);
+      color: white;
+      font-size: 10pt;
+      font-weight: bold;
+      height: 30px;
+    }
+  </style>
+  <script>
+    var cx = 12; // x 축 크기
+    var cy = 28; // y 축 크기
+    var score = 0; // 점수
+    var level = 0; // 레벨 (0->1레벨)
+    var area = new Array(cx*cy);//전체 크기
+
+    var x, y; // 블럭 위치
+    var yc = 0;
+
+    var lx =0;
+    var ly =0; // 블럭 위치 조정값
+    var shapeNo = 0; //현재 블록변수 번호
+    var rix = 0;//블록 모양 바꾸기시 필요한 변수
+    var nextShape; //블록 받을 인덱스 변수
+    var background = "white"; //배경색
+    var colors = new Array("#999999", "#3399ff", "#9933ff", "#33ff99", "#99ff33", "#ff9933", "#ff3399"); // 블럭별 색
+    var browser=navigator.userAgent;
+    var speed = new Array(1000, 800, 600, 450, 300, 200, 150, 120, 100, 50); // 레벨에 따른 속도 ( 레벨1 : 1 초에 1칸, 레벨2 : 0.7초에 한칸 ... )
+    var score = 0; // 점수
+    var scoreRule = new Array(5, 20, 50, 80, 150); // 점수 규칙 ( 행삭제갯수가 0 이면 1, 1이면 10, ... )
+
+    var totalEraseLine = 0; // 총 삭제행 수
+    var chkLevelUp = 0; // 레벨업을 체크변수(최종 레벨의 삭제행 수를 저장)
+    var stepLevelLine  = 15; // 레벨업이 몇 삭제행 단위로 동작하는지 (5이상으로 설정)
+    var combo=0; //연속으로 블럭을 깨면 combo 가증가함 포인트 획득 증가.
+    var blockTotal; // 떨어진 블럭 총 갯수
+    //블럭에서 빠진 2개의 블럭 배열을 추가
+    var id = '${sessionScope.session.id}';
+
+    var timeoutID;
+    var matrix = new Array (
+        new Array (
+
+// 0000
+// 0110
+// 0110
+// 0000
+            new Array( 0x0, 0x6, 0x6, 0x0 )
+        ),
+        new Array ( // 추가된 블럭
+// 0000 1000
+// 0110 1100
+// 1100 0100
+// 0000 0000
+            new Array( 0x0, 0x6, 0xc, 0x0 ),
+            new Array( 0x8, 0xc, 0x4, 0x0 )
+        ),
+        new Array ( // 추가된 블럭
+// 0000 0100
+// 1100 1100
+// 0110 1000
+// 0000 0000
+            new Array( 0x0, 0xc, 0x6, 0x0 ),
+            new Array( 0x4, 0xc, 0x8, 0x0 )
+        ),
+        new Array (
+// 0000 0100 0010 1100
+// 1110 0100 1110 0100
+// 1000 0110 0000 0100
+// 0000 0000 0000 0000
+            new Array( 0x0, 0xe, 0x8, 0x0 ),
+            new Array( 0x4, 0x4, 0x6, 0x0 ),
+            new Array( 0x2, 0xe, 0x0, 0x0 ),
+            new Array( 0xc, 0x4, 0x4, 0x0 )
+        ),
+        new Array (
+// 0000 0110 1000 0100
+// 1110 0100 1110 0100
+// 0010 0100 0000 1100
+// 0000 0000 0000 0000
+            new Array( 0x0, 0xe, 0x2, 0x0 ),
+            new Array( 0x6, 0x4, 0x4, 0x0 ),
+            new Array( 0x8, 0xe, 0x0, 0x0 ),
+            new Array( 0x4, 0x4, 0xc, 0x0 )
+        ),
+        new Array (
+// 0000 0100 0100 0100
+// 1110 0110 1110 1100
+// 0100 0100 0000 0100
+// 0000 0000 0000 0000
+            new Array( 0x0, 0xe, 0x4, 0x0 ),
+            new Array( 0x4, 0x6, 0x4, 0x0 ),
+            new Array( 0x4, 0xe, 0x0, 0x0 ),
+            new Array( 0x4, 0xc, 0x4, 0x0 )
+        ),
+        new Array (
+// 0000 0100
+// 1111 0100
+// 0000 0100
+// 0000 0100
+            new Array( 0x0, 0xf, 0x0, 0x0 ),
+            new Array( 0x4, 0x4, 0x4, 0x4 )
+        )
+    );
+
+    document.onkeydown= checkKey;
+
+    function checkFirst(){
+      startTetris();
+    }
+
+    function startTetris() {
+
+      //$("#inputLayout").css("display","block");
+
+      //$("#inputControl").focus();
+
+      if(document.getElementById("btnStart").value == "Stop!") {
+
+        if(confirm("게임을 포기하겠습니까 ?")) {
+          clearTimeout(timeoutID);
+          alert("게임 끝 ~~~ 점수 : " + score + " / 삭제행 : " + totalEraseLine);
+          var url="<%=cp%>/event/finishTetris.action";
+          var params = "point="+score+"&id="+id;
+          $.ajax({
+            url:url
+            ,type:"post"
+            ,data:params
+            ,success:function(args){
+              $("#recordList").html(args);
+            }
+            ,error:function(e){
+              alert(e.responseText);
+            }
+          });
+          //location = "?d=" + escape(new Date());
+          document.getElementById("btnStart").value = "Start!";
+          $("#txtScore").val('0');
+          return;
+        }
+      }
+      document.getElementById("btnStart").value = "Stop!";
+      //레벨 초기화 시키기.
+      tLevel = eval(document.getElementById("txtLevel").value);
+      if (tLevel > 0 && tLevel <= 10)
+        level = tLevel - 1;
+      else
+        level = 0;
+
+      //$("body").bind("keydown(event)");
+
+
+
+
+      //시작시 만들 블록 1~7 랜덤값 받기
+      nextShape = Math.floor(Math.random()*matrix.length);
+
+      //시작시 전체 블럭을 검정색으로 바꾸기
+      for(var i=0; i<area.length; i++) {
+        area[i] = 0;
+        if(browser.indexOf("Firefox")>-1){
+          document.getElementsByName("bg")[i].style.backgroundColor = background;
+        }
+        else{
+          document.all.bg[i].style.backgroundColor = background;
+        }
+      }
+
+      down();
+
+    }
+
+    function down(){
+      //다음 블록 만들기
+      shapeNo = nextShape; //블록 랜덤값을 받은 nextShpae 값을 shapeNo으로 준다.
+
+      nextShape = Math.floor(Math.random() * matrix.length); //다음 블록을 미리 만들기 위해서
+      shape = matrix[nextShape][0];//미리 만들어 놓은 블럭 값 의 첫번째 블록을 가져온다.
+
+      shapeColor = colors[nextShape]; //미리 배열에 만들어 놓은 색깔값을 준다.
+      makeShapePreview();//다음 블럭 만들기
+
+      //지금 블록 만들기
+      shape = matrix[shapeNo][0]; //시작시 만들었던 블록 랜덤값으로 블록을 가진다.
+      shapeColor = colors[shapeNo];
+      makeShape();
+      //블럭을 보여준다.
+      document.getElementById("blockSpan").style.display = "block";
+      document.getElementById("blockPreview").style.display = "block";
+
+      rix = 0;//블록 나올때 초기화 시키기.
+      y = -1; x = 4; yc = 0;
+      if(!canMove(x, y+1, shape)) {
+        //alert("게임 끝 ~~~ 당신의 점수는 " + score + "점이며 총 " + totalEraseLine + "입니다.\n등수는 랭킹페이지에서 확인 할 수 있습니다.");
+        alert("게임 끝 ~~~ 점수 : " + score + " / 삭제행 : " + totalEraseLine);
+        clearTimeout(timeoutID);
+        //location = "rank.asp?game=tetris&score=" + score;
+        var url="<%=cp%>/event/finishTetris.action";
+        var params = "point="+score+"&id="+id;
+        $.ajax({
+          url:url
+          ,type:"post"
+          ,data:params
+          ,success:function(args){
+            $("#recordList").html(args);
+          }
+          ,error:function(e){
+            alert(e.responseText);
+          }
+        });
+        document.getElementById("btnStart").value = "Start!";
+        $("#txtScore").val(0);
+        //location = "?d=" + escape(new Date());
+        return;
+      }
+      downFunc();
+
+    }
+
+    function downFunc() {
+      if(!canMove(x, y+1, shape)) {
+        fixBlock(x, y, shape);
+        down();
+        return;
+      }
+      moveTetris(x, ++y, yc);
+      timeoutID = setTimeout(downFunc,speed[level]);
+    }
+
+    //블럭 고정 및 행 삭제
+    function fixBlock(x, y, shp) {
+      var lineElasped = 0; //삭제된 라인수 저장할 변수
+      //블록을 고정시킬 for문
+      for(var i=0; i<shp.length; i++) {
+        var c = 8;
+        var ni = shp[i];
+        if(ni > 0) {
+          for(var j=0; j<4; j++) {
+            if((ni&c) > 0) {
+              var dx = x + j; //j는 x축이다.
+              var dy = y + i;//i는 높이를
+              var pno = dy * cx + dx; //
+              area[pno] = shapeNo + 1;//블록이 안채워져있다면 0이나 채워지면 0이상으로 바뀐다.
+              area[i] = 0;
+
+              if(browser.indexOf("Firefox")>-1){
+                document.getElementsByName("bg")[pno].style.backgroundColor = colors[shapeNo];
+              }
+              else{
+                document.all.bg[pno].style.backgroundColor = colors[shapeNo];
+              }
+
+            }
+            c >>= 1;
+          }
+        }
+      }
+      var redraw = -1; //블럭 삭제 검사
+      for(var i=0; i<cy; i++) {
+        var pno = i * cx; //첫번째줄 부터 끝까지 검사한다.
+
+        for(j=0; j<cx; j++) {
+          if(area[pno++] == 0) { break; } //한개라도 공백이 있으면 리턴 시킴.
+        }
+        if(j == cx) {
+          lineElasped++; //삭제된 라인 저장 이라인수에 의해서 점수가 결정됨.
+          totalEraseLine++; //전체 라인 삭제 수 저장
+          for(var k=i; k>0; k--) {
+            var pd = k*cx;//지워질 첫번째 줄
+            var ps = (k-1)*cx; //지워진 줄의 윗줄
+            for(var j=0; j<cx; j++) {
+              area[pd] = area[ps];//윗줄과 아랫줄을 바꿔줌.
+              pd++; ps++;
+            }
+          }
+          redraw = i;
+        }
+
+
+      }
+      //지워진 줄이 있다면 다시 그린다.
+      if(redraw >= 0) {
+        combo++;//지원줄이 있다면 증가
+        for(var i=0; i<(redraw+1)*cx; i++) {
+          if(browser.indexOf("Firefox")>-1){
+            document.getElementsByName("bg")[i].style.backgroundColor=area[i]==0 ? background : colors[area[i]-1];//위에서 shapeNo+1를 해줫기 때문에 -1을 하는 이유이다.
+          }
+          else{
+            document.all.bg[i].style.backgroundColor=area[i]==0 ? background : colors[area[i]-1];
+          }
+
+        }
+      }
+      else{
+        combo=0;//삭제가 되지 않으면 0으로 초기화 시키기.
+      }
+
+      //콤보라면 점수 두배로~
+      if(combo>=2){
+        score +=scoreRule[lineElasped]*combo;
+      }
+      else{
+        score += scoreRule[lineElasped];
+      }
+      $("#txtScore").val(score);
+      //blockTotal++;
+
+      // 레벨업 방법을 블럭갯수에서 삭제행 수로 계산방법을 변경
+      if((totalEraseLine - chkLevelUp - stepLevelLine >= 0) && (level < 9)) {
+
+        stepLevelLine = stepLevelLine+(level*2);//레벨업될때마다 삭제 행수가 높아짐
+        level++;
+        chkLevelUp += stepLevelLine;
+        showLevel();
+      }
+
+
+    }
+
+    function showLevel() {
+      document.getElementById("blockSpan").style.display = "none";
+      alert("LEVEL " + (level + 1));
+      $("#txtLevel").val(level + 1);
+      document.getElementById("blockSpan").style.display = "block";
+    }
+
+    function moveTetris(x, y, yc) {
+      //특정 위치 포지션이다.
+      lx =  $("#checkPosition").position().left;
+      ly =  $("#checkPosition").position().top;
+      //border 때문에 1px추가 해주기.
+      lx = lx-81;
+      ly = ly-1;
+
+      document.getElementById("blockSpan").style.top = y * 20 + ly+"px";
+      document.getElementById("blockSpan").style.left = x * 20 +lx +"px";
+
+      //다음 블록 해당 위치에 보여주기
+      var slx =  $("#checkNextPosition").position().left;
+      var sly =  $("#checkNextPosition").position().top;
+      slx=slx-1;
+      sly=sly-1;
+      if(nextShape==6||nextShape==0){ //긴짝대기이거나 네모일때 경우
+        slx = slx-10;
+        document.getElementById("blockPreview").style.top = sly+"px";
+        document.getElementById("blockPreview").style.left = slx +"px";
+      }
+      else{
+        document.getElementById("blockPreview").style.top = sly+"px";
+        document.getElementById("blockPreview").style.left = slx +"px";
+      }
+      //$("blockSpan").css("left","100px");
+
+    }
+
+    function canMove( x, y, shp ) {
+      for(var i=0; i<shp.length; i++) {
+        var c = 8; //비교연산자
+        var ni = shp[i]; //블럭 배열값
+        if(ni > 0) {
+          for(var j=0;j<4;j++) {
+            if((ni&c) > 0) {//논리곱 시킨다.
+              var dx = x+j;
+              //if(x>=9){alert(j+"="+dx);}
+              var dy = y+i;
+
+
+              //cx 와 cy 의 값을 넘어가면 동작이 멈춘다. cx와 x축 길이 cy는 y축 높이이다.
+              //앞서 cx 초기값으로 12를 주었고 cy는 28을 주엇다. 그값을 넘어가면 멈춘다.
+              if(dx<0 || dx>=cx || dy<0 || dy>=cy) { return false;}
+              //area cx 전체 width dy는 현재 높이에서 dx란 현제 x를 예기 하는데
+              //이것을 계산했을때 그곳에 이미 블록이 있다면? 값은 리턴된다.
+              if(area[cx*dy+dx] > 0) { return false;}
+            }
+            c >>= 1;
+          }
+        }
+      }
+      return true;
+    }
+
+    function makeShapePreview() {
+      makeShapeB(document.getElementsByName("pblock"));
+    }
+
+    function makeShape() {
+      makeShapeB(document.getElementsByName("block"));
+    }
+
+    //실제 블럭을 만들어줄 메서드
+    function makeShapeB( blocks ) {
+      var sh = shape;
+      var co = 0;
+      var col = shapeColor;
+      for(var i=0; i<4; i++) {
+        var ix = 8;
+        for(var j=0; j<4; j++) {
+          if((ix&sh[i]) > 0) { //두식의 논리곱을 수행한다.
+
+            blocks[co].style.backgroundColor = col; //블록의 색깔로 변경
+            blocks[co].style.borderColor = col;
+            blocks[co].style.left =  j*20 + 'px';
+            blocks[co].style.top =  i*20 + 'px';
+            co++;
+          }
+          ix >>= 1; //부호를 바꾸지 않고 식을 비트 단위로 오른쪽으로 옮긴다.
+
+        }
+      }
+    }
+
+    function checkKey(e) {
+      var c;
+      var key;
+
+      if(window.event){
+        key = event.keyCode;
+      }
+      else if(e) {//FF일때 들어 온다.
+        key = e.which;
+      }
+      c = String.fromCharCode(key);
+      var keyCode = c.toUpperCase();
+      if(c=='%' || keyCode=='J') { doMove(-1);  return false;}
+      if(c=='\'' || keyCode=='L') { doMove(+1);  return false;}
+      if(c=='&' || keyCode=='I') { rotate(); return false; }
+      if(c=='(' || keyCode=='K') {
+        if(canMove(x, y+1, shape)){
+          doMoveY(+1);
+          return false;
+        }
+
+      }
+      if(c == ' '){
+        clearTimeout(timeoutID);
+        while(canMove(x, y+1, shape)) { y++; }
+        downFunc();
+        return false; //스크롤 되는것을 방지하기 위해서
+      }
+      /* 방향키로도 되게 브라우저 고정이 안됨.
+      var keyCode = c.toUpperCase();
+        if(c=='%' || keyCode=='J') { doMove(-1); }
+        if(c=='\'' || keyCode=='L') { doMove(+1); }
+        if(c=='&' || keyCode=='I') { rotate(); }
+        if(c=='(' || keyCode=='K') {
+          if(canMove(x, y+1, shape)){
+            doMoveY(+1);
+          }
+
+        }
+        //스페이스 누를때
+        if(c == ' '){
+          clearTimeout(timeoutID);
+            while(canMove(x, y+1, shape)) { y++; }
+            downFunc();
+        }
+        */
+    }
+
+    //블록 회전 시키기
+    function rotate() {
+      clearTimeout(timeoutID);
+      timeoutID = setTimeout(downFunc,speed[level]);
+      var l = matrix[shapeNo].length;
+      nrix = (rix + 1) % l;// 모드를 하는 이유는 5번 눌렀을때는 5 /4 =나머지값1이 된다 다시 처음으로 돌아 오기 위해서
+      //x축 끝에서 블록 모양 변경 안되던거 해결
+      if(x>= (cx-2) && shapeNo!=6){
+        x=9;
+        moveTetris(x, y, 0);
+      }
+      else if(x<(cx-cx)){
+        x=0;
+        moveTetris(x, y, 0);
+      }
+          //일자일때 x위치 끝으로 변경하기
+      //오른쪽편
+      else if(shapeNo==6 && nrix==1 && (cx-4)==x){
+        x = cx-2;
+        moveTetris(x, y, 0);
+      }
+      //왼쪽편일때
+      else if(shapeNo==6 && nrix==1 && (cx-cx)==x){
+        x = cx-cx-1;
+        moveTetris(x, y, 0);
+      }
+      //ㅣ 일때 오른쪽 끝에서 ㅡ 변경하기
+      else if(shapeNo==6 && cx-2==x && nrix==0){
+        x=8;
+        moveTetris(x, y, 0);
+      }
+      if(!canMove(x, y, matrix[shapeNo][nrix])) { return; }
+      shape = matrix[shapeNo][nrix]; //두번째 모양 설정
+      //alert("shapeNo="+shapeNo+",nrix="+nrix);
+      shapeColor = colors[shapeNo];//색깔 설정
+      rix = nrix; //계속 회전하기 위한.
+      makeShape();
+    }
+
+    function doMove(n) {
+      if(!canMove(x+n, y, shape)) { return; }
+      x += n;
+      moveTetris(x, y, 0);
+    }
+
+    function doMoveY(n) {
+      if(!canMove(x, y+n, shape)) { return; }
+      y += n;
+      moveTetris(x, y, 0);
+    }
+
+  </script>
+</head>
+<body>
+<div style="width: 750px;">
+
+</div>
+<div style="width: 450px; height:600px; float: left;">
+  <center>
+    <table>
+      <tr>
+        <td>
+          <table border="0" cellpadding="0" bgcolor="#5e5e5e" cellspacing="1"  >
+            <script  language="javascript" type="text/javascript">
+              var middle=(cx-4)/2; //가운데 찾기.
+              for(var i=0; i<cy; i++) {
+                document.write("<tr height='19'>");
+                for(var j=0;j<cx;j++) {
+                  if(i==0 && j==middle){
+                    document.write("<td width='19' name='bg' id='bg'  valign='top'  bgcolor='" + background + "'><div id='checkPosition'></div></td>");
+
+                  }
+                  else{
+                    document.write("<td width='19' name='bg' id='bg' bgcolor='" + background + "'> </td>");
+                  }
+
+                }
+                document.write("</tr>");
+              }
+            </script>
+          </table>
+        </td>
+        <!-- 첫번째 익스플로러
+        두번째 사파리, 파이어폭스, 오페라 순으로  -->
+        <td valign="top" style="filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#5e5e5e', endColorstr='#d4d4d4');
+							background: -webkit-gradient(linear, left top, left bottom, from(#5e5e5e), to(#d4d4d4));
+							background: -moz-linear-gradient(top,  #5e5e5e,  #d4d4d4);
+							background: -o-linear-gradient(top,  #5e5e5e,  #d4d4d4);
+							"  align="center" >
+          <br>
+          <span style="font-weight: bold; color: #FFFFFF; height: 41px;">TETRIS</span>
+          <br>
+          <table border="0" cellpadding="0" bgcolor="#5e5e5e" cellspacing="1">
+            <script  language="javascript" type="text/javascript">
+
+              for(var i=0; i<4; i++) {
+                document.write("<tr height='19'>");
+                for(var j=0; j<5; j++) {
+                  if(i==0 && j==1){
+                    document.write("<td width='19' name='bg' id='bg'  valign='top'  bgcolor='" + background + "'><div id='checkNextPosition'></div></td>");
+                  }
+                  else{
+                    document.write("<td width='19' bgcolor='" + background + "'> </td>");
+                  }
+                }
+                document.write("</tr>");
+              }
+            </script>
+          </table>
+          <br/>
+          <span style="font-weight: bold; color: #FFFFFF; height: 41;">SCORE</span><br>
+          <input type="text" id="txtScore"  style="border: 1px solid white; font-weight: bold; font-family: verdana; font-size: 11pt; width:150px; text-align: right; background-color: white; color: black;" value="0"  readonly="readonly"><br>
+          <span style="font-weight: bold; color: #FFFFFF; height: 41px;">LEVEL</span><br>
+          <input type="text" id="txtLevel" style="border: 1px solid white; font-weight: bold; font-family: verdana; font-size: 11pt; width:150px; text-align: right; background-color: white; color: black;" value="0" readonly="readonly"><br>
+          <input type="button" id="btnStart" value="Start" onfocus="blur()" onclick="checkFirst()" style="width:100%">
+          <br>
+
+        </td>
+      </tr>
+    </table>
+
+
+    <div style="position: absolute; display:none;"  id="blockSpan">
+      <div style="width: 19px; height: 19px; border: 1px solid #CCCCCC; position: absolute;" name="block"></div>
+      <div style="width: 19px; height: 19px; border: 1px solid #CCCCCC; position: absolute;" name="block"></div>
+      <div style="width: 19px; height: 19px; border: 1px solid #CCCCCC; position: absolute;" name="block"></div>
+      <div style="width: 19px; height: 19px; border: 1px solid #CCCCCC; position: absolute;" name="block"></div>
+    </div>
+    <!-- 다음 블록 만들기 -->
+
+    <div style="position:absolute; display: none; " id="blockPreview">
+      <div style="width: 19px; height: 19px; border: 1px solid #CCCCCC; position: absolute;" name="pblock"></div>
+      <div style="width: 19px; height: 19px; border: 1px solid #CCCCCC; position: absolute;" name="pblock"></div>
+      <div style="width: 19px; height: 19px; border: 1px solid #CCCCCC; position: absolute;" name="pblock"></div>
+      <div style="width: 19px; height: 19px; border: 1px solid #CCCCCC; position: absolute;" name="pblock"></div>
+    </div>
+
+
+  </center>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+

@@ -130,19 +130,19 @@
         if(confirm("게임을 포기하겠습니까 ?")) {
           clearTimeout(timeoutID);
           alert("게임 끝 ~~~ 점수 : " + score + " / 삭제행 : " + totalEraseLine);
-          var url="<%=cp%>/event/finishTetris.action";
-          var params = "point="+score+"&id="+id;
-          $.ajax({
-            url:url
-            ,type:"post"
-            ,data:params
-            ,success:function(args){
-              $("#recordList").html(args);
-            }
-            ,error:function(e){
-              alert(e.responseText);
-            }
-          });
+          // var url="<%=cp%>/event/finishTetris.action";
+          // var params = "point="+score+"&id="+id;
+          // $.ajax({
+          //   url:url
+          //   ,type:"post"
+          //   ,data:params
+          //   ,success:function(args){
+          //     $("#recordList").html(args);
+          //   }
+          //   ,error:function(e){
+          //     alert(e.responseText);
+          //   }
+          // });
           //location = "?d=" + escape(new Date());
           document.getElementById("btnStart").value = "Start!";
           $("#txtScore").val('0');
@@ -205,19 +205,19 @@
         alert("게임 끝 ~~~ 점수 : " + score + " / 삭제행 : " + totalEraseLine);
         clearTimeout(timeoutID);
         //location = "rank.asp?game=tetris&score=" + score;
-        var url="<%=cp%>/event/finishTetris.action";
-        var params = "point="+score+"&id="+id;
-        $.ajax({
-          url:url
-          ,type:"post"
-          ,data:params
-          ,success:function(args){
-            $("#recordList").html(args);
-          }
-          ,error:function(e){
-            alert(e.responseText);
-          }
-        });
+        // var url="<%=cp%>/event/finishTetris.action";
+        // var params = "point="+score+"&id="+id;
+        // $.ajax({
+        //   url:url
+        //   ,type:"post"
+        //   ,data:params
+        //   ,success:function(args){
+        //     $("#recordList").html(args);
+        //   }
+        //   ,error:function(e){
+        //     alert(e.responseText);
+        //   }
+        // });
         document.getElementById("btnStart").value = "Start!";
         $("#txtScore").val(0);
         //location = "?d=" + escape(new Date());

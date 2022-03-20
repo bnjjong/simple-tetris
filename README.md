@@ -33,7 +33,7 @@
 
 ---
 
-> You can check your `score` and `level`. 
+> You can check your `score` and `level`.   
 > Also you can see the next block in the upper right corner.   
 > When the game level is up, the block `down speed` is up.   
 > Enjoy Playing game.!   

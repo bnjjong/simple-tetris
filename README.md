@@ -31,9 +31,10 @@
 
 ![Tetris](./images/tetris.png)
 
+---
 
-- You can check your `score` and `level`.
-- When the game level is up, block `down speed` is up.
-- Enjoy Playing game.!
+> You can check your `score` and `level`.   
+> When the game level is up, block `down speed` is up.   
+> Enjoy Playing game.!   
 
 ![Tetris](./images/play.png)

@@ -20,7 +20,7 @@
 ## Synopsis
 
 > Play simple Tetris.  
-> Just open tetris html file on any your browser.
+> Just open tetris html file on any browser.
 
 ## Manual
 - `arrow key` : move the block by arrow key. 
@@ -33,8 +33,9 @@
 
 ---
 
-> You can check your `score` and `level`.   
-> When the game level is up, block `down speed` is up.   
+> You can check your `score` and `level`. 
+> Also you can see the next block in the upper right corner.   
+> When the game level is up, the block `down speed` is up.   
 > Enjoy Playing game.!   
 
 ![Tetris](./images/play.png)

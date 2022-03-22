@@ -4,7 +4,7 @@
 <!--  <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.16/jquery-ui.min.js" ></script>-->
   <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.js" ></script>
   <meta charset="utf-8">
-  <title>Hello World</title>
+  <title>Hello Tetris!</title>
   <style>
     .rankList{
       filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#5e5e5e', endColorstr='#d4d4d4');
@@ -36,7 +36,6 @@
     var colors = new Array("#999999", "#3399ff", "#9933ff", "#33ff99", "#99ff33", "#ff9933", "#ff3399"); // 블럭별 색
     var browser=navigator.userAgent;
     var speed = new Array(1000, 800, 600, 450, 300, 200, 150, 120, 100, 50); // 레벨에 따른 속도 ( 레벨1 : 1 초에 1칸, 레벨2 : 0.7초에 한칸 ... )
-    var score = 0; // 점수
     var scoreRule = new Array(5, 20, 50, 80, 150); // 점수 규칙 ( 행삭제갯수가 0 이면 1, 1이면 10, ... )
 
     var totalEraseLine = 0; // 총 삭제행 수
@@ -45,7 +44,6 @@
     var combo=0; //연속으로 블럭을 깨면 combo 가증가함 포인트 획득 증가.
     var blockTotal; // 떨어진 블럭 총 갯수
     //블럭에서 빠진 2개의 블럭 배열을 추가
-    var id = '${sessionScope.session.id}';
 
     var timeoutID;
     var matrix = new Array (
@@ -120,46 +118,24 @@
     }
 
     function startTetris() {
-
-      //$("#inputLayout").css("display","block");
-
-      //$("#inputControl").focus();
-
       if(document.getElementById("btnStart").value == "Stop!") {
 
         if(confirm("게임을 포기하겠습니까 ?")) {
           clearTimeout(timeoutID);
           alert("게임 끝 ~~~ 점수 : " + score + " / 삭제행 : " + totalEraseLine);
-          // var url="<%=cp%>/event/finishTetris.action";
-          // var params = "point="+score+"&id="+id;
-          // $.ajax({
-          //   url:url
-          //   ,type:"post"
-          //   ,data:params
-          //   ,success:function(args){
-          //     $("#recordList").html(args);
-          //   }
-          //   ,error:function(e){
-          //     alert(e.responseText);
-          //   }
-          // });
-          //location = "?d=" + escape(new Date());
-          document.getElementById("btnStart").value = "Start!";
+          $("#btnStart").val("Start!");
+          // document.getElementById("btnStart").value = "Start!";
           $("#txtScore").val('0');
           return;
         }
       }
-      document.getElementById("btnStart").value = "Stop!";
+      $("#btnStart").val("Stop!");
       //레벨 초기화 시키기.
       tLevel = eval(document.getElementById("txtLevel").value);
       if (tLevel > 0 && tLevel <= 10)
         level = tLevel - 1;
       else
         level = 0;
-
-      //$("body").bind("keydown(event)");
-
-
 
 
       //시작시 만들 블록 1~7 랜덤값 받기
@@ -168,16 +144,9 @@
       //시작시 전체 블럭을 검정색으로 바꾸기
       for(var i=0; i<area.length; i++) {
         area[i] = 0;
-        if(browser.indexOf("Firefox")>-1){
-          document.getElementsByName("bg")[i].style.backgroundColor = background;
-        }
-        else{
-          document.all.bg[i].style.backgroundColor = background;
-        }
+        document.getElementsByName("bg")[i].style.backgroundColor = background;
       }
-
       down();
-
     }
 
     function down(){
@@ -204,20 +173,6 @@
         //alert("게임 끝 ~~~ 당신의 점수는 " + score + "점이며 총 " + totalEraseLine + "입니다.\n등수는 랭킹페이지에서 확인 할 수 있습니다.");
         alert("게임 끝 ~~~ 점수 : " + score + " / 삭제행 : " + totalEraseLine);
         clearTimeout(timeoutID);
-        //location = "rank.asp?game=tetris&score=" + score;
-        // var url="<%=cp%>/event/finishTetris.action";
-        // var params = "point="+score+"&id="+id;
-        // $.ajax({
-        //   url:url
-        //   ,type:"post"
-        //   ,data:params
-        //   ,success:function(args){
-        //     $("#recordList").html(args);
-        //   }
-        //   ,error:function(e){
-        //     alert(e.responseText);
-        //   }
-        // });
         document.getElementById("btnStart").value = "Start!";
         $("#txtScore").val(0);
         //location = "?d=" + escape(new Date());
@@ -581,7 +536,7 @@
           <input type="text" id="txtScore"  style="border: 1px solid white; font-weight: bold; font-family: verdana; font-size: 11pt; width:150px; text-align: right; background-color: white; color: black;" value="0"  readonly="readonly"><br>
           <span style="font-weight: bold; color: #FFFFFF; height: 41px;">LEVEL</span><br>
           <input type="text" id="txtLevel" style="border: 1px solid white; font-weight: bold; font-family: verdana; font-size: 11pt; width:150px; text-align: right; background-color: white; color: black;" value="0" readonly="readonly"><br>
-          <input type="button" id="btnStart" value="Start" onfocus="blur()" onclick="checkFirst()" style="width:100%">
+          <input type="button" id="btnStart" value="Start!" onfocus="blur()" onclick="checkFirst()" style="width:100%">
           <br>
 
         </td>
